@@ -1,1 +1,95 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password - SkillBite</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header>
+    <h1>SkillBite</h1>
+    <h2>Reset Your Password</h2>
+  </header>
+  <nav>
+    <ul>
+      <li><a href="index.html#home">Home</a></li>
+      <li><a href="index.html#services">Services</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#contact-info">Contact Info</a></li>
+    </ul>
+  </nav>
+  <main>
+    <section id="reset-password">
+      <h2>Reset Password</h2>
+      <div class="description">
+        <p id="status-message">Verifying your reset link...</p>
+        <div id="reset-form" style="display:none;">
+          <label for="new-password">Enter New Password:</label><br/>
+          <input type="password" id="new-password" style="margin-top:10px; padding:10px; width:300px;" /><br/><br/>
+          <button onclick="submitNewPassword()" style="padding:10px 20px; background-color:#F8741F; color:white; border:none; border-radius:5px;">Update Password</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 SkillBite</p>
+  </footer>
+  <img src="Logo - kucuk harf.png" alt="SkillBite Logo" class="logo-image" />
+
+  <script>
+    const { createClient } = window.supabase;
+    const client = createClient(
+      'https://dgujizxnjceavphtgsev.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRndWppenhuamNlYXZwaHRnc2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4OTQ1MTcsImV4cCI6MjA2NTQ3MDUxN30.dxq-ajFxvV8YDkP-iVGb7TBb7f4AStc8vCdXCa6b1HE'
+    );
+
+    function getTokenFromUrl() {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const token = hashParams.get('access_token');
+      const type = hashParams.get('type');
+      return { token, type };
+    }
+
+    async function verifyToken() {
+      const { token, type } = getTokenFromUrl();
+
+      console.log('Token:', token);
+      console.log('Type:', type);
+
+      if (token && type === 'recovery') {
+        const { error } = await client.auth.verifyOtp({ token, type: 'recovery' });
+        if (error) {
+          console.error('Verification error:', error.message);
+          document.getElementById('status-message').textContent = 'Invalid or expired reset link.';
+        } else {
+          document.getElementById('status-message').textContent = 'Reset link verified. Please enter your new password.';
+          document.getElementById('reset-form').style.display = 'block';
+        }
+      } else {
+        document.getElementById('status-message').textContent = 'Missing or invalid reset token.';
+      }
+    }
+
+    async function submitNewPassword() {
+      const newPassword = document.getElementById('new-password').value;
+      if (!newPassword || newPassword.length < 6) {
+        alert('Password must be at least 6 characters.');
+        return;
+      }
+
+      const { error } = await client.auth.updateUser({ password: newPassword });
+      if (error) {
+        alert('Failed to update password: ' + error.message);
+      } else {
+        alert('Password updated successfully! You can now log in.');
+        window.location.href = '/';
+      }
+    }
+
+    verifyToken();
+  </script>
+</body>
+</html>
