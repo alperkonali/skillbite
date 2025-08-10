@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reset Password - SkillBite</title>
   <link rel="stylesheet" href="../styles.css" />
-  https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2
 </head>
 <body>
   <header>
@@ -45,21 +44,20 @@
   </footer>
   <img src="../Logo - kucuk harf.png" alt="SkillBite Logo" class="logo-image" />
 
-  <script>
-    const { createClient } = window.supabase;
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    // Replace with your actual public anon key
     const client = createClient(
       'https://dgujizxnjceavphtgsev.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRndWppenhuamNlYXZwaHRnc2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4OTQ1MTcsImV4cCI6MjA2NTQ3MDUxN30.dxq-ajFxvV8YDkP-iVGb7TBb7f4AStc8vCdXCa6b1HE'
+      'YOUR_PUBLIC_ANON_KEY' // Replace with your actual public anon key
     );
 
     function getTokenFromUrl() {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       return {
         token: hashParams.get('access_token'),
-        type: hashParams.get('type'),
         refreshToken: hashParams.get('refresh_token'),
+        type: hashParams.get('type'),
         error: hashParams.get('error'),
         errorCode: hashParams.get('error_code'),
         errorDescription: hashParams.get('error_description')
@@ -78,21 +76,26 @@
     }
 
     async function verifyToken() {
-      const { token, type, refreshToken } = getTokenFromUrl();
+      const { token, refreshToken, type } = getTokenFromUrl();
 
       if (token && type === 'recovery') {
-        const { error } = await client.auth.setSession({
-          access_token: token,
-          refresh_token: refreshToken
-        });
+        try {
+          const { error } = await client.auth.setSession({
+            access_token: token,
+            refresh_token: refreshToken
+          });
 
-        if (error) {
-          console.error('Session error:', error.message);
-          document.getElementById('status-message').textContent = 'Invalid or expired reset link.';
-          document.getElementById('resend-link').style.display = 'block';
-        } else {
-          document.getElementById('status-message').textContent = 'Reset link verified. Please enter your new password.';
-          document.getElementById('reset-form').style.display = 'block';
+          if (error) {
+            console.error('Session error:', error.message);
+            document.getElementById('status-message').textContent = 'Invalid or expired reset link.';
+            document.getElementById('resend-link').style.display = 'block';
+          } else {
+            document.getElementById('status-message').textContent = 'Reset link verified. Please enter your new password.';
+            document.getElementById('reset-form').style.display = 'block';
+          }
+        } catch (err) {
+          console.error('Unexpected error:', err);
+          document.getElementById('status-message').textContent = 'Something went wrong.';
         }
       }
     }
